@@ -1,15 +1,18 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
 
-import { watch } from 'chokidar';
+import { watch, FSWatcher } from 'chokidar';
 
 import { getDestPath, runImagemin } from './common';
 import { IMAGE_EXTENSIONS } from './constants';
+import { WatchCmdOptions } from './types';
 
-function logAndSafeHandler<T>(func: (filePath: string) => Promise<T>): (filePath: string) => Promise<void> {
+function logFileEvent(event: string, filePath: string, destPath: string) {
+  console.info(`${event} "${filePath}" -> "${destPath}"`);
+}
+
+function safeHandler<T>(func: (filePath: string) => Promise<T>): (filePath: string) => Promise<void> {
   return function(filePath: string) {
-    console.debug('Handling fs event', filePath);
-
     return func(filePath)
       .then(out => {
         console.debug('Handler output', out);
@@ -20,32 +23,45 @@ function logAndSafeHandler<T>(func: (filePath: string) => Promise<T>): (filePath
   };
 }
 
-export function startWatch(source: string, dest: string) {
+export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   async function onChange(filePath: string) {
-    console.log(path.extname(filePath));
     if (!IMAGE_EXTENSIONS.has(path.extname(filePath))) {
       return;
     }
 
     const destPath = getDestPath(source, dest, filePath);
-    console.info('A', filePath, destPath);
+    logFileEvent('A', filePath, destPath);
     return runImagemin(filePath, path.dirname(destPath));
   }
 
   async function onRemove(filePath: string) {
     const destPath = getDestPath(source, dest, filePath);
-    console.info('D', filePath, destPath);
+    logFileEvent('D', filePath, destPath);
     return fs.unlink(destPath);
+  }
+
+  async function addHandlers(watcher: FSWatcher) {
+    watcher.on('add', safeHandler(onChange));
+    watcher.on('change', safeHandler(onChange));
+    watcher.on('unlink', safeHandler(onRemove));
+    watcher.on('unlinkDir', safeHandler(onRemove));
   }
 
   const watcher = watch(source, {
     awaitWriteFinish: true,
   });
-  watcher.on('add', logAndSafeHandler(onChange));
-  watcher.on('change', logAndSafeHandler(onChange));
-  watcher.on('unlink', logAndSafeHandler(onRemove));
-  watcher.on('unlinkDir', logAndSafeHandler(onRemove));
-  watcher.on('ready', () => console.info('Initial scan complete. Ready for changes'));
+
+  if (options.initialize) {
+    console.info(`Initializing ${source} and will output to ${dest}.`);
+    addHandlers(watcher);
+  }
+
+  watcher.on('ready', () => {
+    if (!options.initialize) {
+      addHandlers(watcher);
+    }
+    console.info(`Watching changes in ${source} and will output to ${dest}.`);
+  });
+
   watcher.on('error', error => console.error(`Watcher error: ${error}`));
-  console.info('watching', source, 'to', dest);
 }
