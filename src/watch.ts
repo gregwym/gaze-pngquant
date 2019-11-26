@@ -1,21 +1,18 @@
+import { FSWatcher, watch } from 'chokidar';
+import { promises as fs, Stats as FileStats } from 'fs';
 import * as path from 'path';
-import { promises as fs } from 'fs';
 
-import { watch, FSWatcher } from 'chokidar';
-
-import { getDestPath, runImagemin } from './common';
+import { getDestPath, logFileEvent, runImagemin } from './common';
 import { IMAGE_EXTENSIONS } from './constants';
 import { WatchCmdOptions } from './types';
 
-function logFileEvent(event: string, filePath: string, destPath: string) {
-  console.info(`${event} "${filePath}" -> "${destPath}"`);
-}
-
-function safeHandler<T>(func: (filePath: string) => Promise<T>): (filePath: string) => Promise<void> {
-  return function(filePath: string) {
-    return func(filePath)
+function safeHandler<T>(
+  func: (filePath: string, stat: FileStats) => Promise<T>,
+): (filePath: string, stat: FileStats) => Promise<void> {
+  return function(filePath: string, stat: FileStats) {
+    return func(filePath, stat)
       .then(out => {
-        console.debug('Handler output', out);
+        // console.debug('Handler output', out);
       })
       .catch(e => {
         console.error(e);
@@ -24,19 +21,29 @@ function safeHandler<T>(func: (filePath: string) => Promise<T>): (filePath: stri
 }
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
-  async function onChange(filePath: string) {
+  async function onChange(filePath: string, fileStats?: FileStats) {
     if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
       return;
     }
 
     const destPath = getDestPath(source, dest, filePath);
-    logFileEvent('A', filePath, destPath);
-    return runImagemin(filePath, path.dirname(destPath));
+    logFileEvent('modified', { from: filePath, to: destPath });
+
+    await runImagemin(filePath, path.dirname(destPath));
+
+    const destStats = await fs.stat(destPath);
+    logFileEvent('compressed', {
+      from: filePath,
+      to: destPath,
+      origin: fileStats && fileStats.size,
+      output: destStats.size,
+    });
+    return destStats;
   }
 
   async function onRemove(filePath: string) {
     const destPath = getDestPath(source, dest, filePath);
-    logFileEvent('D', filePath, destPath);
+    logFileEvent('deleted', { from: filePath, to: destPath });
     return fs.unlink(destPath);
   }
 
