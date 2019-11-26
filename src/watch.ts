@@ -25,7 +25,7 @@ function safeHandler<T>(func: (filePath: string) => Promise<T>): (filePath: stri
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   async function onChange(filePath: string) {
-    if (!IMAGE_EXTENSIONS.has(path.extname(filePath))) {
+    if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
       return;
     }
 
