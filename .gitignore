@@ -61,7 +61,7 @@ typings/
 .next
 
 # build output
-build
+dist
 
 # test dir
 in
