@@ -9,4 +9,5 @@ export const PNGQUANT_OPTIONS: PngquantOptions = {
 
 export const MOZJPEG_OPTIONS: MozjpegOptions = {
   progressive: false,
+  quality: 85,
 };
