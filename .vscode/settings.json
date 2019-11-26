@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.rulers": [120],
+  "search.exclude": {
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/tmp": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.tslint": true
+  },
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "window.title": "${activeEditorMedium}${separator}${rootName}",
+  "npm.autoDetect": "off"
+}
