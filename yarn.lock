@@ -42,6 +42,13 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
+"@types/imagemin-mozjpeg@^8.0.0":
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/@types/imagemin-mozjpeg/-/imagemin-mozjpeg-8.0.0.tgz#6986c34734aa767d83672eeb519379a2d7ec8b16"
+  integrity sha512-sR2nEZOrlbgnmVgG+lXetZOvhgtctLe1hBfvySnPnxDd2pOon9mMPq7SHFI89VZT1AXvFgRs8w6X8ik8potpgA==
+  dependencies:
+    "@types/imagemin" "*"
+
 "@types/imagemin-pngquant@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@types/imagemin-pngquant/-/imagemin-pngquant-7.0.0.tgz#fd074409a369ebc2bf3e6ea77b268a460225b204"
@@ -158,7 +165,7 @@ bin-version@^3.0.0:
     execa "^1.0.0"
     find-versions "^3.0.0"
 
-bin-wrapper@^4.0.1:
+bin-wrapper@^4.0.0, bin-wrapper@^4.0.1:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/bin-wrapper/-/bin-wrapper-4.1.0.tgz#99348f2cf85031e3ef7efce7e5300aeaae960605"
   integrity sha512-hfRmo7hWIXPkbpi0ZltboCMVrU+0ClXR/JgbCKKjlDjQf6igXa7OwdqNcFWQZPZTgiY7ZpzE3+LjjkLiTN2T7Q==
@@ -853,6 +860,15 @@ ignore@^5.1.1:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.4.tgz#84b7b3dbe64552b6ef0eca99f6743dbec6d97adf"
   integrity sha512-MzbUSahkTW1u7JpKKjY7LCARd1fU5W2rLdxlM4kdkayuCwZImjkpluF9CM1aLewYJguPDqewLam18Y6AU69A8A==
 
+imagemin-mozjpeg@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/imagemin-mozjpeg/-/imagemin-mozjpeg-8.0.0.tgz#d2ca4e8c982c7c6eda55069af89dee4c1cebcdfd"
+  integrity sha512-+EciPiIjCb8JWjQNr1q8sYWYf7GDCNDxPYnkD11TNIjjWNzaV+oTg4DpOPQjl5ZX/KRCPMEgS79zLYAQzLitIA==
+  dependencies:
+    execa "^1.0.0"
+    is-jpg "^2.0.0"
+    mozjpeg "^6.0.0"
+
 imagemin-pngquant@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/imagemin-pngquant/-/imagemin-pngquant-8.0.0.tgz#bf7a41d850c6998f2475c54058ab1db9c516385d"
@@ -946,6 +962,11 @@ is-glob@^4.0.1, is-glob@~4.0.1:
   dependencies:
     is-extglob "^2.1.1"
 
+is-jpg@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/is-jpg/-/is-jpg-2.0.0.tgz#2e1997fa6e9166eaac0242daae443403e4ef1d97"
+  integrity sha1-LhmX+m6RZuqsAkLarkQ0A+TvHZc=
+
 is-natural-number@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/is-natural-number/-/is-natural-number-4.0.1.tgz#ab9d76e1db4ced51e35de0c72ebecf09f734cde8"
@@ -1037,7 +1058,7 @@ load-json-file@^1.0.0:
     pinkie-promise "^2.0.0"
     strip-bom "^2.0.0"
 
-logalot@^2.0.0:
+logalot@^2.0.0, logalot@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/logalot/-/logalot-2.1.0.tgz#5f8e8c90d304edf12530951a5554abb8c5e3f552"
   integrity sha1-X46MkNME7fElMJUaVVSruMXj9VI=
@@ -1160,6 +1181,15 @@ minimist@^1.1.3:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
   integrity sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=
+
+mozjpeg@^6.0.0:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/mozjpeg/-/mozjpeg-6.0.1.tgz#56969dddb5741ef2bcb1af066cae21e61a91a27b"
+  integrity sha512-9Z59pJMi8ni+IUvSH5xQwK5tNLw7p3dwDNCZ3o1xE+of3G5Hc/yOz6Ue/YuLiBXU3ZB5oaHPURyPdqfBX/QYJA==
+  dependencies:
+    bin-build "^3.0.0"
+    bin-wrapper "^4.0.0"
+    logalot "^2.1.0"
 
 nice-try@^1.0.4:
   version "1.0.5"
