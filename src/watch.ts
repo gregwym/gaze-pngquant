@@ -1,35 +1,20 @@
-import { FSWatcher, watch } from 'chokidar';
 import * as fs from 'fs';
 import * as moment from 'moment';
+import watch from 'node-watch';
 import * as path from 'path';
 
-import { getDestPath, logFileEvent, runImagemin } from './common';
-import { IGNORED_PATHS, IMAGE_EXTENSIONS } from './constants';
+import { getDestPath, logFileEvent, runImagemin, safeFsStat, shouldIgnore } from './common';
 import { TaskScheduler } from './scheduler';
 import { WatchCmdOptions } from './types';
-
-function safeHandler<T>(
-  func: (filePath: string, stat: fs.Stats) => Promise<T>,
-): (filePath: string, stat: fs.Stats) => Promise<void> {
-  return function(filePath: string, stat: fs.Stats) {
-    return func(filePath, stat)
-      .then(out => {
-        // console.debug('Handler output', out);
-      })
-      .catch(e => {
-        console.error(e);
-      });
-  };
-}
 
 interface CompressRequest {
   sourcePath: string;
   destPath: string;
-  sourceStats?: fs.Stats;
+  sourceStats: fs.Stats;
 }
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
-  const { initialize, since } = options;
+  const { since } = options;
 
   const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: CompressRequest[]) => {
     await Promise.all(
@@ -37,13 +22,13 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
         try {
           await runImagemin(sourcePath, path.dirname(destPath));
 
-          const destStats = fs.statSync(destPath);
+          const destStats = await safeFsStat(destPath);
 
           logFileEvent('compressed', {
             from: sourcePath,
             to: destPath,
-            origin: sourceStats?.size,
-            output: destStats.size,
+            origin: sourceStats.size,
+            output: destStats?.size,
           });
           return destStats;
         } catch (e) {
@@ -59,16 +44,23 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     return [];
   });
 
-  async function onChange(filePath: string, fileStat?: fs.Stats) {
-    if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
+  async function onChange(filePath: string) {
+    const destPath = getDestPath(source, dest, filePath);
+    const fileStat = await safeFsStat(filePath);
+    if (!fileStat) {
+      logFileEvent('not-found', { from: filePath, to: destPath });
       return;
     }
 
-    const destPath = getDestPath(source, dest, filePath);
-    const modifiedAt = fileStat?.mtime;
+    const modifiedAt = fileStat.mtime;
     if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
       logFileEvent('skip-add', { from: filePath, to: destPath, modifiedAt: modifiedAt });
       return;
+    }
+
+    const destStat = await safeFsStat(destPath);
+    if (destStat && destStat.mtime >= modifiedAt) {
+      logFileEvent('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
     }
 
     logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
@@ -85,30 +77,28 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
     // Make sure have write permission
     try {
-      fs.accessSync(destPath, fs.constants.F_OK | fs.constants.W_OK);
+      await fs.promises.access(destPath, fs.constants.F_OK | fs.constants.W_OK);
     } catch (e) {
       logFileEvent('skip-delete', { from: filePath, to: destPath });
       return;
     }
 
-    return fs.unlinkSync(destPath);
-  }
-
-  async function addHandlers(watcher: FSWatcher) {
-    watcher.on('add', safeHandler(onChange));
-    watcher.on('change', safeHandler(onChange));
-    watcher.on('unlink', safeHandler(onRemove));
-    watcher.on('unlinkDir', safeHandler(onRemove));
+    await fs.promises.unlink(destPath);
   }
 
   console.info(`Start to watch ${source} and will output to ${dest}.`);
 
-  const watcher = watch(source, {
-    awaitWriteFinish: true,
-    ignored: IGNORED_PATHS,
-    ignoreInitial: !initialize,
+  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnore(p) }, async (fileEvent, filePath) => {
+    try {
+      if (fileEvent === 'update') {
+        await onChange(filePath);
+      } else if (fileEvent === 'remove') {
+        await onRemove(filePath);
+      }
+    } catch (e) {
+      console.error('Handler error: ', e);
+    }
   });
-  addHandlers(watcher);
 
   watcher.on('ready', () => {
     console.info(`Ready for changes in ${source} and will output to ${dest}.`);
@@ -118,14 +108,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
   process.on('SIGINT', () => {
     console.info('Watch terminates');
-    watcher
-      .close()
-      .then(() => {
-        process.exit(0);
-      })
-      .catch(e => {
-        console.error(e);
-        process.exit(1);
-      });
+    watcher.close();
+    process.exit(0);
   });
 }
