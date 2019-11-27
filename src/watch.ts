@@ -5,6 +5,7 @@ import * as path from 'path';
 
 import { getDestPath, logFileEvent, runImagemin } from './common';
 import { IMAGE_EXTENSIONS } from './constants';
+import { TaskScheduler } from './scheduler';
 import { WatchCmdOptions } from './types';
 
 function safeHandler<T>(
@@ -21,8 +22,42 @@ function safeHandler<T>(
   };
 }
 
+interface CompressRequest {
+  sourcePath: string;
+  destPath: string;
+  sourceStats?: FileStats;
+}
+
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   const { initialize, since } = options;
+
+  const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: CompressRequest[]) => {
+    await Promise.all(
+      requests.map(async ({ sourcePath, destPath, sourceStats }) => {
+        try {
+          await runImagemin(sourcePath, path.dirname(destPath));
+
+          const destStats = await fs.stat(destPath);
+
+          logFileEvent('compressed', {
+            from: sourcePath,
+            to: destPath,
+            origin: sourceStats?.size,
+            output: destStats.size,
+          });
+          return destStats;
+        } catch (e) {
+          logFileEvent('failed', {
+            from: sourcePath,
+            to: destPath,
+            error: e,
+          });
+          return;
+        }
+      }),
+    );
+    return [];
+  });
 
   async function onChange(filePath: string, fileStats?: FileStats) {
     if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
@@ -36,16 +71,11 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     }
 
     logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
-    await runImagemin(filePath, path.dirname(destPath));
-
-    const destStats = await fs.stat(destPath);
-    logFileEvent('compressed', {
-      from: filePath,
-      to: destPath,
-      origin: fileStats?.size,
-      output: destStats.size,
+    taskScheduler.push({
+      sourcePath: filePath,
+      destPath: destPath,
+      sourceStats: fileStats,
     });
-    return destStats;
   }
 
   async function onRemove(filePath: string) {
