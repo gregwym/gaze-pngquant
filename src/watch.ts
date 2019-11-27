@@ -91,21 +91,17 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     watcher.on('unlinkDir', safeHandler(onRemove));
   }
 
+  console.info(`Start to watch ${source} and will output to ${dest}.`);
+
   const watcher = watch(source, {
     awaitWriteFinish: true,
     ignored: IGNORED_PATHS,
+    ignoreInitial: !initialize,
   });
-
-  if (initialize) {
-    console.info(`Initializing ${source} and will output to ${dest}.`);
-    addHandlers(watcher);
-  }
+  addHandlers(watcher);
 
   watcher.on('ready', () => {
-    if (!initialize) {
-      addHandlers(watcher);
-    }
-    console.info(`Watching changes in ${source} and will output to ${dest}.`);
+    console.info(`Ready for changes in ${source} and will output to ${dest}.`);
   });
 
   watcher.on('error', error => console.error(`Watcher error: ${error}`));
