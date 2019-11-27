@@ -47,7 +47,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
           });
           return destStats;
         } catch (e) {
-          logFileEvent('failed', {
+          logFileEvent('compress-failed', {
             from: sourcePath,
             to: destPath,
             error: e,
@@ -67,7 +67,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     const destPath = getDestPath(source, dest, filePath);
     const modifiedAt = fileStats?.mtime;
     if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
-      logFileEvent('skipped', { from: filePath, to: destPath, modifiedAt: modifiedAt });
+      logFileEvent('skip-add', { from: filePath, to: destPath, modifiedAt: modifiedAt });
     }
 
     logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
