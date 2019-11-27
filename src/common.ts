@@ -18,16 +18,23 @@ export function logFileEvent(
     origin?: number;
     output?: number;
     modifiedAt?: Date | string;
+    error?: Error;
   },
 ) {
-  const { origin, output, modifiedAt } = detail;
+  const { from, to, origin, output, modifiedAt, error } = detail;
 
-  console.info(`${event}: `, {
-    ...detail,
-    origin: origin && prettyBytes(origin),
-    output: output && prettyBytes(output),
-    modifiedAt: modifiedAt instanceof Date ? modifiedAt.toLocaleString() : modifiedAt,
-  });
+  console.info(
+    `${event}: "${from}" -> "${to}"`,
+    JSON.stringify({
+      origin: origin && prettyBytes(origin),
+      output: output && prettyBytes(output),
+      modifiedAt: modifiedAt instanceof Date ? modifiedAt.toISOString() : modifiedAt,
+    }),
+  );
+
+  if (error) {
+    console.error(error);
+  }
 }
 
 export async function runImagemin(fromPath: string, toPath: string) {
