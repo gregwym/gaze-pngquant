@@ -71,4 +71,9 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
   });
 
   watcher.on('error', error => console.error(`Watcher error: ${error}`));
+
+  process.on('SIGINT', () => {
+    console.info('Watch terminates');
+    watcher.close();
+  });
 }
