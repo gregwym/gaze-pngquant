@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import * as path from 'path';
 
 import { getDestPath, logFileEvent, runImagemin } from './common';
-import { IMAGE_EXTENSIONS } from './constants';
+import { IGNORED_PATH, IMAGE_EXTENSIONS } from './constants';
 import { TaskScheduler } from './scheduler';
 import { WatchCmdOptions } from './types';
 
@@ -93,6 +93,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
   const watcher = watch(source, {
     awaitWriteFinish: true,
+    ignored: IGNORED_PATH,
   });
 
   if (initialize) {
