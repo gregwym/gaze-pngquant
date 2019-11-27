@@ -1,5 +1,5 @@
 import { FSWatcher, watch } from 'chokidar';
-import { promises as fs, Stats as FileStats } from 'fs';
+import { constants as FsConstants, promises as fs, Stats as FileStats } from 'fs';
 import * as moment from 'moment';
 import * as path from 'path';
 
@@ -81,6 +81,15 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
   async function onRemove(filePath: string) {
     const destPath = getDestPath(source, dest, filePath);
     logFileEvent('deleted', { from: filePath, to: destPath });
+
+    // Make sure have write permission
+    try {
+      await fs.access(destPath, FsConstants.F_OK | FsConstants.W_OK);
+    } catch (e) {
+      logFileEvent('skip-delete', { from: filePath, to: destPath });
+      return;
+    }
+
     return fs.unlink(destPath);
   }
 
