@@ -1,6 +1,6 @@
 FROM node:lts-alpine
 
-RUN apt-get update && apt-get install -y vim
+RUN apk update && apk add vim
 
 WORKDIR /usr/src/app
 
