@@ -48,9 +48,10 @@ export class TaskScheduler<T> {
       this.isRunning = true;
       this.run(this.handler)
         .catch(err => {
+          this.isRunning = false;
           console.error(err.message || err);
         })
-        .finally(() => {
+        .then(() => {
           this.isRunning = false;
         });
     }

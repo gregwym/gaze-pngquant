@@ -1,5 +1,5 @@
 import { FSWatcher, watch } from 'chokidar';
-import { constants as FsConstants, promises as fs, Stats as FileStats } from 'fs';
+import * as fs from 'fs';
 import * as moment from 'moment';
 import * as path from 'path';
 
@@ -9,9 +9,9 @@ import { TaskScheduler } from './scheduler';
 import { WatchCmdOptions } from './types';
 
 function safeHandler<T>(
-  func: (filePath: string, stat: FileStats) => Promise<T>,
-): (filePath: string, stat: FileStats) => Promise<void> {
-  return function(filePath: string, stat: FileStats) {
+  func: (filePath: string, stat: fs.Stats) => Promise<T>,
+): (filePath: string, stat: fs.Stats) => Promise<void> {
+  return function(filePath: string, stat: fs.Stats) {
     return func(filePath, stat)
       .then(out => {
         // console.debug('Handler output', out);
@@ -25,7 +25,7 @@ function safeHandler<T>(
 interface CompressRequest {
   sourcePath: string;
   destPath: string;
-  sourceStats?: FileStats;
+  sourceStats?: fs.Stats;
 }
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
@@ -37,7 +37,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
         try {
           await runImagemin(sourcePath, path.dirname(destPath));
 
-          const destStats = await fs.stat(destPath);
+          const destStats = fs.statSync(destPath);
 
           logFileEvent('compressed', {
             from: sourcePath,
@@ -59,13 +59,13 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     return [];
   });
 
-  async function onChange(filePath: string, fileStats?: FileStats) {
+  async function onChange(filePath: string, fileStat?: fs.Stats) {
     if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
       return;
     }
 
     const destPath = getDestPath(source, dest, filePath);
-    const modifiedAt = fileStats?.mtime;
+    const modifiedAt = fileStat?.mtime;
     if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
       logFileEvent('skip-add', { from: filePath, to: destPath, modifiedAt: modifiedAt });
     }
@@ -74,7 +74,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     taskScheduler.push({
       sourcePath: filePath,
       destPath: destPath,
-      sourceStats: fileStats,
+      sourceStats: fileStat,
     });
   }
 
@@ -84,13 +84,13 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
     // Make sure have write permission
     try {
-      await fs.access(destPath, FsConstants.F_OK | FsConstants.W_OK);
+      fs.accessSync(destPath, fs.constants.F_OK | fs.constants.W_OK);
     } catch (e) {
       logFileEvent('skip-delete', { from: filePath, to: destPath });
       return;
     }
 
-    return fs.unlink(destPath);
+    return fs.unlinkSync(destPath);
   }
 
   async function addHandlers(watcher: FSWatcher) {
