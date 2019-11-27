@@ -19,17 +19,11 @@ export function logFileEvent(
     output?: number;
   },
 ) {
-  console.info(
-    `${event}: ${JSON.stringify(
-      {
-        ...detail,
-        origin: detail.origin && prettyBytes(detail.origin),
-        output: detail.output && prettyBytes(detail.output),
-      },
-      null,
-      2,
-    )}`,
-  );
+  console.info(`${event}: `, {
+    ...detail,
+    origin: detail.origin && prettyBytes(detail.origin),
+    output: detail.output && prettyBytes(detail.output),
+  });
 }
 
 export async function runImagemin(fromPath: string, toPath: string) {
