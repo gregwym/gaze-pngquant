@@ -68,6 +68,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     const modifiedAt = fileStat?.mtime;
     if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
       logFileEvent('skip-add', { from: filePath, to: destPath, modifiedAt: modifiedAt });
+      return;
     }
 
     logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
