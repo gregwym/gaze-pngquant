@@ -6,7 +6,7 @@
   "author": "Greg Wang <gregwym@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "cli": "ts-node ./src/cli.ts",
+    "cli": "ts-node --log-error ./src/cli.ts",
     "build": "tsc"
   },
   "dependencies": {
