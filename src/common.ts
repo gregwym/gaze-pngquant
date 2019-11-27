@@ -17,12 +17,16 @@ export function logFileEvent(
     to: string;
     origin?: number;
     output?: number;
+    modifiedAt?: Date | string;
   },
 ) {
+  const { origin, output, modifiedAt } = detail;
+
   console.info(`${event}: `, {
     ...detail,
-    origin: detail.origin && prettyBytes(detail.origin),
-    output: detail.output && prettyBytes(detail.output),
+    origin: origin && prettyBytes(origin),
+    output: output && prettyBytes(output),
+    modifiedAt: modifiedAt instanceof Date ? modifiedAt.toLocaleString() : modifiedAt,
   });
 }
 

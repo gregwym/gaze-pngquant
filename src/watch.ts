@@ -1,5 +1,6 @@
 import { FSWatcher, watch } from 'chokidar';
 import { promises as fs, Stats as FileStats } from 'fs';
+import * as moment from 'moment';
 import * as path from 'path';
 
 import { getDestPath, logFileEvent, runImagemin } from './common';
@@ -21,21 +22,27 @@ function safeHandler<T>(
 }
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
+  const { initialize, since } = options;
+
   async function onChange(filePath: string, fileStats?: FileStats) {
     if (!IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
       return;
     }
 
     const destPath = getDestPath(source, dest, filePath);
-    logFileEvent('modified', { from: filePath, to: destPath });
+    const modifiedAt = fileStats?.mtime;
+    if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
+      logFileEvent('skipped', { from: filePath, to: destPath, modifiedAt: modifiedAt });
+    }
 
+    logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
     await runImagemin(filePath, path.dirname(destPath));
 
     const destStats = await fs.stat(destPath);
     logFileEvent('compressed', {
       from: filePath,
       to: destPath,
-      origin: fileStats && fileStats.size,
+      origin: fileStats?.size,
       output: destStats.size,
     });
     return destStats;
@@ -58,13 +65,13 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     awaitWriteFinish: true,
   });
 
-  if (options.initialize) {
+  if (initialize) {
     console.info(`Initializing ${source} and will output to ${dest}.`);
     addHandlers(watcher);
   }
 
   watcher.on('ready', () => {
-    if (!options.initialize) {
+    if (!initialize) {
       addHandlers(watcher);
     }
     console.info(`Watching changes in ${source} and will output to ${dest}.`);
