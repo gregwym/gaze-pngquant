@@ -118,6 +118,14 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
   process.on('SIGINT', () => {
     console.info('Watch terminates');
-    watcher.close();
+    watcher
+      .close()
+      .then(() => {
+        process.exit(0);
+      })
+      .catch(e => {
+        console.error(e);
+        process.exit(1);
+      });
   });
 }
