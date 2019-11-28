@@ -108,8 +108,8 @@ export async function compressToDest(source: string, dest: string, filePath: str
     return false;
   }
 
-  if (fileStat.size < IGNORED_FILE_SIZE) {
-    logFileEvent('skip-small', { from: filePath });
+  if (!fileStat.size) {
+    logFileEvent('skip-zero', { from: filePath });
     return false;
   }
 
