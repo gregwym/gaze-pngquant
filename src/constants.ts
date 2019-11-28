@@ -7,6 +7,8 @@ export const IGNORED_PATHS = [
   '**/.*/**', // Hidden dir
   '**/@*', // Synology hidden file
   '**/@*/**', // Synology hidden dir
+  '**/#recycle', // Synology #recycle
+  '**/#recycle/**', // Synology #recycle
 ];
 
 export const PNGQUANT_OPTIONS: PngquantOptions = {
