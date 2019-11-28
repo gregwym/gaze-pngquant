@@ -1,12 +1,21 @@
+import * as NodeCache from 'node-cache';
 import watch from 'node-watch';
 
 import { compressToDest, removeDestFile, shouldIgnorePath } from '../common';
 import { WatchCmdOptions } from '../types';
 
+// Debounce file update event for 5s
+const FILE_EVENT_EXPIRE_TTL = 5;
+
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   console.info(`Start to watch ${source} and will output to ${dest}.`);
 
-  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnorePath(p) }, async (fileEvent, filePath) => {
+  const fileEventBuffer = new NodeCache({
+    stdTTL: FILE_EVENT_EXPIRE_TTL,
+    checkperiod: 1,
+  });
+
+  fileEventBuffer.on('expired', async (filePath, fileEvent) => {
     try {
       if (fileEvent === 'update') {
         await compressToDest(source, dest, filePath);
@@ -16,6 +25,10 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     } catch (e) {
       console.error('Handler error: ', e);
     }
+  });
+
+  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnorePath(p) }, async (fileEvent, filePath) => {
+    fileEventBuffer.set(filePath, fileEvent);
   });
 
   watcher.on('ready', () => {
