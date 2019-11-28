@@ -1,6 +1,4 @@
-FROM node:lts-alpine
-
-RUN apk update && apk add vim
+FROM node:lts-slim
 
 WORKDIR /usr/src/app
 
