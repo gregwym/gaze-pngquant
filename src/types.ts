@@ -1,4 +1,1 @@
-export interface WatchCmdOptions {
-  initialize?: boolean;
-  since?: string;
-}
+export interface WatchCmdOptions {}

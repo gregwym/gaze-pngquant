@@ -4,6 +4,7 @@ import watch from 'node-watch';
 import * as path from 'path';
 
 import { getDestPath, logFileEvent, runImagemin, safeFsStat, shouldIgnore } from './common';
+import { IGNORED_FILE_SIZE } from './constants';
 import { TaskScheduler } from './scheduler';
 import { WatchCmdOptions } from './types';
 
@@ -48,22 +49,20 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     const destPath = getDestPath(source, dest, filePath);
     const fileStat = await safeFsStat(filePath);
     if (!fileStat) {
-      logFileEvent('not-found', { from: filePath, to: destPath });
+      logFileEvent('not-found', { from: filePath });
       return;
     }
 
-    const modifiedAt = fileStat.mtime;
-    if (since && modifiedAt && moment(since).isAfter(modifiedAt)) {
-      logFileEvent('skip-add', { from: filePath, to: destPath, modifiedAt: modifiedAt });
-      return;
+    if (fileStat.size < IGNORED_FILE_SIZE) {
+      logFileEvent('skip-small', { from: filePath });
     }
 
     const destStat = await safeFsStat(destPath);
-    if (destStat && destStat.mtime >= modifiedAt) {
+    if (destStat && destStat.mtime >= fileStat.mtime) {
       logFileEvent('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
     }
 
-    logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: modifiedAt });
+    logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: fileStat.mtime });
     taskScheduler.push({
       sourcePath: filePath,
       destPath: destPath,

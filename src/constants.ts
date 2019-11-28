@@ -9,6 +9,8 @@ export const IGNORED_PATHS = [
   '**/@*/**', // Synology hidden dir
 ];
 
+export const IGNORED_FILE_SIZE = 5120;
+
 export const PNGQUANT_OPTIONS: PngquantOptions = {
   speed: 1,
 };

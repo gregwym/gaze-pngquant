@@ -20,7 +20,7 @@ export function logFileEvent(
   event: string,
   detail: {
     from: string;
-    to: string;
+    to?: string;
     origin?: number;
     output?: number;
     modifiedAt?: Date | string;
