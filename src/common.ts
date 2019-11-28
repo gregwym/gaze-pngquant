@@ -134,15 +134,18 @@ export async function compressToDest(source: string, dest: string, filePath: str
 
 export async function removeDestFile(source: string, dest: string, filePath: string) {
   const destPath = getDestPath(source, dest, filePath);
-  logFileEvent('deleted', { from: filePath, to: destPath });
 
   // Make sure have write permission
-  try {
-    await fs.promises.access(destPath, fs.constants.F_OK | fs.constants.W_OK);
-  } catch (e) {
+  const destStat = await safeFsStat(destPath);
+  if (!destStat) {
     logFileEvent('skip-delete', { from: filePath, to: destPath });
     return;
   }
 
-  await fs.promises.unlink(destPath);
+  logFileEvent('deleted', { from: filePath, to: destPath });
+  if (destStat.isDirectory()) {
+    await fs.promises.rmdir(destPath, { recursive: true });
+  } else {
+    await fs.promises.unlink(destPath);
+  }
 }
