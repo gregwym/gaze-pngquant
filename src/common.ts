@@ -108,6 +108,11 @@ export async function compressToDest(source: string, dest: string, filePath: str
     return false;
   }
 
+  if (!fileStat) {
+    logFileEvent('dir', { from: filePath });
+    return false;
+  }
+
   if (!fileStat.size) {
     logFileEvent('skip-zero', { from: filePath });
     return false;
