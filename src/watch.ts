@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as moment from 'moment';
 import watch from 'node-watch';
 import * as path from 'path';
 
@@ -15,8 +14,6 @@ interface CompressRequest {
 }
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
-  const { since } = options;
-
   const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: CompressRequest[]) => {
     await Promise.all(
       requests.map(async ({ sourcePath, destPath, sourceStats }) => {
