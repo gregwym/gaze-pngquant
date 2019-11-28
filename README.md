@@ -10,6 +10,8 @@ Compress all png/jpg/jpeg
 
 ```
 yarn cli compress <source> <dest>
+yarn cli compress --after <time> <source> <dest>
+yarn cli compress --before <time> <source> <dest>
 ```
 
 Watch changes
