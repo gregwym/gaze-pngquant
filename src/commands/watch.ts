@@ -1,12 +1,12 @@
 import watch from 'node-watch';
 
-import { compressToDest, removeDestFile, shouldIgnore } from '../common';
+import { compressToDest, removeDestFile, shouldIgnorePath } from '../common';
 import { WatchCmdOptions } from '../types';
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   console.info(`Start to watch ${source} and will output to ${dest}.`);
 
-  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnore(p) }, async (fileEvent, filePath) => {
+  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnorePath(p) }, async (fileEvent, filePath) => {
     try {
       if (fileEvent === 'update') {
         await compressToDest(source, dest, filePath);

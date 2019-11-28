@@ -9,7 +9,7 @@ import * as prettyBytes from 'pretty-bytes';
 import { IGNORED_FILE_SIZE, IGNORED_PATHS, IMAGE_EXTENSIONS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } from './constants';
 import { TaskScheduler } from './scheduler';
 
-export function shouldIgnore(filePath: string) {
+export function shouldIgnorePath(filePath: string) {
   return anymatch(IGNORED_PATHS, filePath) || !IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
 }
 
@@ -68,21 +68,21 @@ export async function safeFsStat(p: string) {
 interface CompressRequest {
   sourcePath: string;
   destPath: string;
-  sourceStats: fs.Stats;
 }
 
 const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: CompressRequest[]) => {
   await Promise.all(
-    requests.map(async ({ sourcePath, destPath, sourceStats }) => {
+    requests.map(async ({ sourcePath, destPath }) => {
       try {
         await runImagemin(sourcePath, path.dirname(destPath));
 
+        const sourceStats = await safeFsStat(sourcePath);
         const destStats = await safeFsStat(destPath);
 
         logFileEvent('compressed', {
           from: sourcePath,
           to: destPath,
-          origin: sourceStats.size,
+          origin: sourceStats?.size,
           output: destStats?.size,
         });
         return destStats;
@@ -104,24 +104,26 @@ export async function compressToDest(source: string, dest: string, filePath: str
   const fileStat = await safeFsStat(filePath);
   if (!fileStat) {
     logFileEvent('not-found', { from: filePath });
-    return;
+    return false;
   }
 
   if (fileStat.size < IGNORED_FILE_SIZE) {
     logFileEvent('skip-small', { from: filePath });
+    return false;
   }
 
   const destStat = await safeFsStat(destPath);
   if (destStat && destStat.mtime >= fileStat.mtime) {
     logFileEvent('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
+    return false;
   }
 
   logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: fileStat.mtime });
   taskScheduler.push({
     sourcePath: filePath,
     destPath: destPath,
-    sourceStats: fileStat,
   });
+  return true;
 }
 
 export async function removeDestFile(source: string, dest: string, filePath: string) {
