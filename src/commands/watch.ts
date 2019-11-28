@@ -2,10 +2,10 @@ import * as fs from 'fs';
 import watch from 'node-watch';
 import * as path from 'path';
 
-import { getDestPath, logFileEvent, runImagemin, safeFsStat, shouldIgnore } from './common';
-import { IGNORED_FILE_SIZE } from './constants';
-import { TaskScheduler } from './scheduler';
-import { WatchCmdOptions } from './types';
+import { getDestPath, logFileEvent, runImagemin, safeFsStat, shouldIgnore } from '../common';
+import { IGNORED_FILE_SIZE } from '../constants';
+import { TaskScheduler } from '../scheduler';
+import { WatchCmdOptions } from '../types';
 
 interface CompressRequest {
   sourcePath: string;

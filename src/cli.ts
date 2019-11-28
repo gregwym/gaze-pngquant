@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { startWatch } from './watch';
+import { startWatch } from './commands/watch';
 
 const program = new Command();
 
