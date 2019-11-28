@@ -10,7 +10,8 @@ import { IGNORED_FILE_SIZE, IGNORED_PATHS, IMAGE_EXTENSIONS, MOZJPEG_OPTIONS, PN
 import { TaskScheduler } from './scheduler';
 
 export function shouldIgnorePath(filePath: string) {
-  return anymatch(IGNORED_PATHS, filePath) || !IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+  const extension = path.extname(filePath).toLowerCase();
+  return anymatch(IGNORED_PATHS, filePath) || (!!extension && !IMAGE_EXTENSIONS.has(extension));
 }
 
 export function getDestPath(source: string, dest: string, filePath: string) {
