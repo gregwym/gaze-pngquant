@@ -10,7 +10,7 @@ export const IGNORED_PATHS = [
   '**/#recycle', // Synology #recycle
   '**/#recycle/**', // Synology #recycle
 ];
-export const IMAGE_PATHS = ['**/*.png', '**/*.jpg', '**/*.jpeg'];
+export const IMAGE_PATHS = [/.+\.png$/i, /.+\.jpg$/i, /.+\.jpeg$/i];
 
 export const PNGQUANT_OPTIONS: PngquantOptions = {
   speed: 1,

@@ -136,6 +136,7 @@ export async function compressToDest(source: string, dest: string, filePath: str
 
   if (!isImagePath(filePath)) {
     logFileEvent('not-image', { from: filePath });
+    return false;
   }
 
   const destStat = await safeFsStat(destPath);
