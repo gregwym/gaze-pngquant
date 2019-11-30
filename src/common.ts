@@ -75,9 +75,17 @@ const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: Compre
   await Promise.all(
     requests.map(async ({ sourcePath, destPath }) => {
       try {
+        const sourceStats = await safeFsStat(sourcePath);
+        if (!sourceStats) {
+          logFileEvent('compress-not-found', {
+            from: sourcePath,
+            to: destPath,
+          });
+          return null;
+        }
+
         await runImagemin(sourcePath, path.dirname(destPath));
 
-        const sourceStats = await safeFsStat(sourcePath);
         const destStats = await safeFsStat(destPath);
 
         logFileEvent('compressed', {
@@ -93,7 +101,7 @@ const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: Compre
           to: destPath,
           error: e,
         });
-        return;
+        return null;
       }
     }),
   );
