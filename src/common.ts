@@ -9,7 +9,7 @@ import * as prettyBytes from 'pretty-bytes';
 import { IGNORED_PATHS, IMAGE_EXTENSIONS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } from './constants';
 import { TaskScheduler } from './scheduler';
 
-export function shouldIgnorePath(filePath: string) {
+export function isIgnoredPath(filePath: string) {
   return anymatch(IGNORED_PATHS, filePath);
 }
 

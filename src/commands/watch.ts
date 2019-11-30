@@ -1,7 +1,7 @@
 import * as NodeCache from 'node-cache';
 import watch from 'node-watch';
 
-import { compressToDest, removeDestFile, shouldIgnorePath } from '../common';
+import { compressToDest, isIgnoredPath, removeDestFile } from '../common';
 import { WatchCmdOptions } from '../types';
 
 // Debounce file update event for 5s
@@ -27,8 +27,12 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     }
   });
 
-  const watcher = watch(source, { recursive: true, filter: p => !shouldIgnorePath(p) }, async (fileEvent, filePath) => {
+  const watcher = watch(source, { recursive: true }, async (fileEvent, filePath) => {
     console.info(`event: ${fileEvent} "${filePath}"`);
+    if (isIgnoredPath(filePath)) {
+      console.info(`ignored: "${filePath}"`);
+      return;
+    }
     fileEventBuffer.set(filePath, fileEvent);
   });
 

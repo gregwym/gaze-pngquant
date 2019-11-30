@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import * as readdir from 'recursive-readdir';
 
-import { compressToDest, logFileEvent, safeFsStat, shouldIgnorePath } from '../common';
+import { compressToDest, isIgnoredPath, logFileEvent, safeFsStat } from '../common';
 import { CompressCmdOptions } from '../types';
 
 export async function startCompress(source: string, dest: string, options: CompressCmdOptions = {}) {
@@ -9,7 +9,7 @@ export async function startCompress(source: string, dest: string, options: Compr
   const afterMoment = after && moment(after);
   const beforeMoment = before && moment(before);
 
-  const filePaths = await readdir(source, [shouldIgnorePath]);
+  const filePaths = await readdir(source, [isIgnoredPath]);
 
   for (const filePath of filePaths) {
     if (after || before) {
