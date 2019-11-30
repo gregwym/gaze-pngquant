@@ -19,7 +19,7 @@ taskScheduler.push(3)
  */
 export class TaskScheduler<T> {
   private static DEFAULT_OPTIONS = {
-    batchSize: 10,
+    batchSize: 1,
   };
 
   private tasks: T[] = [];
@@ -28,7 +28,7 @@ export class TaskScheduler<T> {
   /**
    * @param handler 处理函数
    * @param options {
-   *    batchSize: 单次处理函数处理的数组上限，默认为10
+   *    batchSize: 单次处理函数处理的数组上限，默认为1
    * }
    */
   constructor(
