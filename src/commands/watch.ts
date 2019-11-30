@@ -28,6 +28,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
   });
 
   const watcher = watch(source, { recursive: true, filter: p => !shouldIgnorePath(p) }, async (fileEvent, filePath) => {
+    console.info(`event: ${fileEvent} "${filePath}"`);
     fileEventBuffer.set(filePath, fileEvent);
   });
 
