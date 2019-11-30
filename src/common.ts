@@ -6,11 +6,15 @@ import imageminPngquant from 'imagemin-pngquant';
 import * as path from 'path';
 import * as prettyBytes from 'pretty-bytes';
 
-import { IGNORED_PATHS, IMAGE_EXTENSIONS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } from './constants';
+import { IGNORED_PATHS, IMAGE_EXTENSIONS, IMAGE_PATHS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } from './constants';
 import { TaskScheduler } from './scheduler';
 
 export function isIgnoredPath(filePath: string) {
   return anymatch(IGNORED_PATHS, filePath);
+}
+
+export function isImagePath(filePath: string) {
+  return anymatch(IMAGE_PATHS, filePath);
 }
 
 export function isImageExtname(filePath: string) {
@@ -130,8 +134,8 @@ export async function compressToDest(source: string, dest: string, filePath: str
     return false;
   }
 
-  if (!isImageExtname(filePath)) {
-    logFileEvent('not-image-ext', { from: filePath });
+  if (!isImagePath(filePath)) {
+    logFileEvent('not-image', { from: filePath });
   }
 
   const destStat = await safeFsStat(destPath);
