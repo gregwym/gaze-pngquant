@@ -10,8 +10,12 @@ import { IGNORED_PATHS, IMAGE_EXTENSIONS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } fr
 import { TaskScheduler } from './scheduler';
 
 export function shouldIgnorePath(filePath: string) {
+  return anymatch(IGNORED_PATHS, filePath);
+}
+
+export function isImageExtname(filePath: string) {
   const extension = path.extname(filePath).toLowerCase();
-  return anymatch(IGNORED_PATHS, filePath) || (!!extension && !IMAGE_EXTENSIONS.has(extension));
+  return !!extension && !IMAGE_EXTENSIONS.has(extension);
 }
 
 export function getDestPath(source: string, dest: string, filePath: string) {
@@ -124,6 +128,10 @@ export async function compressToDest(source: string, dest: string, filePath: str
   if (!fileStat.size) {
     logFileEvent('skip-zero', { from: filePath });
     return false;
+  }
+
+  if (!isImageExtname(filePath)) {
+    logFileEvent('not-image-ext', { from: filePath });
   }
 
   const destStat = await safeFsStat(destPath);
