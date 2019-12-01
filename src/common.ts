@@ -1,4 +1,5 @@
 import anymatch from 'anymatch';
+import * as debugLogger from 'debug';
 import * as fs from 'fs';
 import * as imagemin from 'imagemin';
 import * as imageminMozjpeg from 'imagemin-mozjpeg';
@@ -8,6 +9,9 @@ import * as prettyBytes from 'pretty-bytes';
 
 import { IGNORED_PATHS, IMAGE_EXTENSIONS, IMAGE_PATHS, MOZJPEG_OPTIONS, PNGQUANT_OPTIONS } from './constants';
 import { TaskScheduler } from './scheduler';
+
+const debugCompress = debugLogger('compress');
+const debugDelete = debugLogger('delete');
 
 export function isIgnoredPath(filePath: string) {
   return anymatch(IGNORED_PATHS, filePath);
@@ -85,7 +89,7 @@ const taskScheduler = new TaskScheduler<CompressRequest>(async (requests: Compre
       try {
         const sourceStats = await safeFsStat(sourcePath);
         if (!sourceStats) {
-          logFileEvent('compress-not-found', {
+          debugCompress('compress-not-found', {
             from: sourcePath,
             to: destPath,
           });
@@ -120,32 +124,32 @@ export async function compressToDest(source: string, dest: string, filePath: str
   const destPath = getDestPath(source, dest, filePath);
   const fileStat = await safeFsStat(filePath);
   if (!fileStat) {
-    logFileEvent('not-found', { from: filePath });
+    debugCompress('not-found', { from: filePath });
     return false;
   }
 
   if (fileStat.isDirectory()) {
-    logFileEvent('dir', { from: filePath });
+    debugCompress('dir', { from: filePath });
     return false;
   }
 
   if (!fileStat.size) {
-    logFileEvent('skip-zero', { from: filePath });
+    debugCompress('skip-zero', { from: filePath });
     return false;
   }
 
   if (!isImagePath(filePath)) {
-    logFileEvent('not-image', { from: filePath });
+    debugCompress('not-image', { from: filePath });
     return false;
   }
 
   const destStat = await safeFsStat(destPath);
   if (destStat && destStat.mtime >= fileStat.mtime) {
-    logFileEvent('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
+    debugCompress('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
     return false;
   }
 
-  logFileEvent('modified', { from: filePath, to: destPath, modifiedAt: fileStat.mtime });
+  debugCompress('modified', { from: filePath, to: destPath, modifiedAt: fileStat.mtime });
   taskScheduler.push({
     sourcePath: filePath,
     destPath: destPath,
@@ -159,7 +163,7 @@ export async function removeDestFile(source: string, dest: string, filePath: str
   // Make sure have write permission
   const destStat = await safeFsStat(destPath);
   if (!destStat) {
-    logFileEvent('skip-delete', { from: filePath, to: destPath });
+    debugDelete('skip-delete', { from: filePath, to: destPath });
     return;
   }
 
