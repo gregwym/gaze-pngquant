@@ -1,3 +1,4 @@
+import * as debugLogger from 'debug';
 import * as NodeCache from 'node-cache';
 import watch from 'node-watch';
 import * as path from 'path';
@@ -5,6 +6,8 @@ import * as readdir from 'recursive-readdir';
 
 import { compressToDest, isIgnoredPath, removeDestFile, safeFsStat } from '../common';
 import { WatchCmdOptions } from '../types';
+
+const debugIntegrity = debugLogger('integrity');
 
 // Debounce file update event for 5s
 const FILE_EVENT_EXPIRE_TTL = 5;
@@ -37,10 +40,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
   integrityCheckBuffer.on('expired', async (dirPath: string, checkCount: number) => {
     const filePaths = await readdir(dirPath, [isIgnoredPath]);
-    console.debug(
-      `integrity: checking ${filePaths.length} files in "${dirPath}" for ${checkCount} file events`,
-      filePaths,
-    );
+    debugIntegrity(`checking ${filePaths.length} files in "${dirPath}" for ${checkCount} file events`, filePaths);
 
     for (const filePath of filePaths) {
       fileEventBuffer.set(filePath, 'update');
@@ -63,17 +63,18 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
 
       let parentDirPath = source;
       for (const pathSeg of pathSegments) {
-        parentDirPath = `${parentDirPath}${parentDirPath.length ? path.sep : ''}${pathSeg}`;
+        parentDirPath = path.join(parentDirPath, pathSeg);
         const checkCount = integrityCheckBuffer.get<number>(parentDirPath);
-        console.debug(`integrity: current path count for "${parentDirPath}" is ${checkCount}`);
+        debugIntegrity(`current path count for "${parentDirPath}" is ${checkCount}`);
         if (checkCount) {
-          console.debug(`integrity: setting "${filePath}" check on parent path "${parentDirPath}"`);
+          debugIntegrity(`setting "${filePath}" check on parent path "${parentDirPath}"`);
           integrityCheckBuffer.set(parentDirPath, checkCount + 1);
           return;
         }
       }
-      console.debug(`integrity: setting "${filePath}" check on dir path "${fileDirPath}"`);
-      integrityCheckBuffer.set(fileDirPath, 1);
+
+      debugIntegrity(`setting "${filePath}" check on dir path "${parentDirPath}"`);
+      integrityCheckBuffer.set(parentDirPath, 1);
     }
   });
 
