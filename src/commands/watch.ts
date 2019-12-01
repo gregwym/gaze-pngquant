@@ -49,6 +49,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
   });
 
   const watcher = watch(source, { recursive: true }, async (fileEvent, filePath) => {
+    // Step1: push file event to buffer
     debugWatcher(`event: ${fileEvent} "${filePath}"`);
     if (isIgnoredPath(filePath)) {
       debugWatcher(`ignored: "${filePath}"`);
@@ -56,27 +57,31 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
     }
     fileEventBuffer.set(filePath, fileEvent);
 
+    // Step2: setup directory integrity check
     const fileStats = await safeFsStat(filePath);
-    if (fileStats) {
-      const fileDirPath = fileStats.isDirectory() ? filePath : path.dirname(filePath);
-      const relativeDirPath = path.relative(source, fileDirPath);
-      const pathSegments = relativeDirPath.split(path.sep);
-
-      let parentDirPath = source;
-      for (const pathSeg of pathSegments) {
-        parentDirPath = path.join(parentDirPath, pathSeg);
-        const checkCount = integrityCheckBuffer.get<number>(parentDirPath);
-        debugIntegrity(`current path count for "${parentDirPath}" is ${checkCount}`);
-        if (checkCount) {
-          debugIntegrity(`setting "${filePath}" check on parent path "${parentDirPath}"`);
-          integrityCheckBuffer.set(parentDirPath, checkCount + 1);
-          return;
-        }
-      }
-
-      debugIntegrity(`setting "${filePath}" check on dir path "${parentDirPath}"`);
-      integrityCheckBuffer.set(parentDirPath, 1);
+    if (!fileStats) {
+      return;
     }
+
+    const fileDirPath = fileStats.isDirectory() ? filePath : path.dirname(filePath);
+    const relativeDirPath = path.relative(source, fileDirPath);
+    const pathSegments = relativeDirPath.split(path.sep);
+
+    let parentDirPath = source;
+    for (const pathSeg of pathSegments) {
+      parentDirPath = path.join(parentDirPath, pathSeg);
+      const checkCount = integrityCheckBuffer.get<number>(parentDirPath);
+      if (checkCount) {
+        debugIntegrity(
+          `setting "${filePath}" check on parent path "${parentDirPath}" with other ${checkCount} file events`,
+        );
+        integrityCheckBuffer.set(parentDirPath, checkCount + 1);
+        return;
+      }
+    }
+
+    debugIntegrity(`setting "${filePath}" check on dir path "${parentDirPath}"`);
+    integrityCheckBuffer.set(parentDirPath, 1);
   });
 
   watcher.on('ready', () => {
