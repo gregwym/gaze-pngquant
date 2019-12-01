@@ -12,7 +12,7 @@ const debugWatcher = debugLogger('watcher');
 
 // Debounce file update event for 5s
 const FILE_EVENT_EXPIRE_TTL = 5;
-const INTEGRITY_CHECK_EXPIRE = 30;
+const INTEGRITY_CHECK_EXPIRE = 60;
 
 export function startWatch(source: string, dest: string, options: WatchCmdOptions = {}) {
   console.info(`Start to watch ${source} and will output to ${dest}.`);
