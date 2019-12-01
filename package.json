@@ -13,6 +13,7 @@
     "@types/imagemin-pngquant": "^7.0.0",
     "anymatch": "^3.1.1",
     "commander": "^4.0.1",
+    "debug": "^4.1.1",
     "imagemin": "^7.0.1",
     "imagemin-mozjpeg": "^8.0.0",
     "imagemin-pngquant": "^8.0.0",
@@ -23,6 +24,7 @@
     "recursive-readdir": "^2.2.2"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.5",
     "@types/imagemin": "^7.0.0",
     "@types/imagemin-mozjpeg": "^8.0.0",
     "@types/node-cache": "^4.2.5",
