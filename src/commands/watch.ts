@@ -33,7 +33,7 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
       console.info(`ignored: "${filePath}"`);
       return;
     }
-    // fileEventBuffer.set(filePath, fileEvent);
+    fileEventBuffer.set(filePath, fileEvent);
   });
 
   watcher.on('ready', () => {
