@@ -142,14 +142,14 @@ export async function compressToDest(source: string, dest: string, filePath: str
   }
 
   const destStat = await safeFsStat(destPath);
-  if (destStat && destStat.mtime >= fileStat.mtime) {
+  if (destStat && destStat.ctime >= fileStat.ctime) {
     debugCompress(
-      `not-modified: ${filePath}@${fileStat.mtime.toISOString()} ${destPath}@${destStat.mtime.toISOString()}`,
+      `not-modified: ${filePath}@${fileStat.ctime.toISOString()} ${destPath}@${destStat.ctime.toISOString()}`,
     );
     return false;
   }
 
-  debugCompress(`modified: ${filePath}@${fileStat.mtime.toISOString()} ${destPath}@${destStat?.mtime.toISOString()}`);
+  debugCompress(`modified: ${filePath}@${fileStat.ctime.toISOString()} ${destPath}@${destStat?.ctime.toISOString()}`);
   taskScheduler.push({
     sourcePath: filePath,
     destPath: destPath,

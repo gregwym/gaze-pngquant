@@ -16,8 +16,8 @@ export async function startCompress(source: string, dest: string, options: Compr
       const fileStat = await safeFsStat(filePath);
       if (
         !fileStat ||
-        (afterMoment && afterMoment.isAfter(fileStat.mtime)) ||
-        (beforeMoment && beforeMoment.isBefore(fileStat.mtime))
+        (afterMoment && afterMoment.isAfter(fileStat.ctime)) ||
+        (beforeMoment && beforeMoment.isBefore(fileStat.ctime))
       ) {
         logFileEvent('skip', { from: filePath });
         continue;
