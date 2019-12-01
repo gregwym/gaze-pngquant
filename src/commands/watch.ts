@@ -8,6 +8,7 @@ import { compressToDest, isIgnoredPath, removeDestFile, safeFsStat } from '../co
 import { WatchCmdOptions } from '../types';
 
 const debugIntegrity = debugLogger('integrity');
+const debugWatcher = debugLogger('watcher');
 
 // Debounce file update event for 5s
 const FILE_EVENT_EXPIRE_TTL = 5;
@@ -48,9 +49,9 @@ export function startWatch(source: string, dest: string, options: WatchCmdOption
   });
 
   const watcher = watch(source, { recursive: true }, async (fileEvent, filePath) => {
-    console.info(`event: ${fileEvent} "${filePath}"`);
+    debugWatcher(`event: ${fileEvent} "${filePath}"`);
     if (isIgnoredPath(filePath)) {
-      console.info(`ignored: "${filePath}"`);
+      debugWatcher(`ignored: "${filePath}"`);
       return;
     }
     fileEventBuffer.set(filePath, fileEvent);
