@@ -37,18 +37,16 @@ export function logFileEvent(
     to?: string;
     origin?: number;
     output?: number;
-    modifiedAt?: Date | string;
     error?: Error;
   },
 ) {
-  const { from, to, origin, output, modifiedAt, error } = detail;
+  const { from, to, origin, output, error } = detail;
 
   console.info(
     `${event}: "${from}" -> "${to}"`,
     JSON.stringify({
       origin: origin && prettyBytes(origin),
       output: output && prettyBytes(output),
-      modifiedAt: modifiedAt instanceof Date ? modifiedAt.toISOString() : modifiedAt,
     }),
   );
 
@@ -124,32 +122,34 @@ export async function compressToDest(source: string, dest: string, filePath: str
   const destPath = getDestPath(source, dest, filePath);
   const fileStat = await safeFsStat(filePath);
   if (!fileStat) {
-    debugCompress('not-found', { from: filePath });
+    debugCompress('not-found', filePath);
     return false;
   }
 
   if (fileStat.isDirectory()) {
-    debugCompress('dir', { from: filePath });
+    debugCompress('dir', filePath);
     return false;
   }
 
   if (!fileStat.size) {
-    debugCompress('skip-zero', { from: filePath });
+    debugCompress('skip-zero', filePath);
     return false;
   }
 
   if (!isImagePath(filePath)) {
-    debugCompress('not-image', { from: filePath });
+    debugCompress('not-image', filePath);
     return false;
   }
 
   const destStat = await safeFsStat(destPath);
   if (destStat && destStat.mtime >= fileStat.mtime) {
-    debugCompress('not-modified', { from: filePath, to: destPath, modifiedAt: destStat.mtime });
+    debugCompress(
+      `not-modified: ${filePath}@${fileStat.mtime.toISOString()} ${destPath}@${destStat.mtime.toISOString()}`,
+    );
     return false;
   }
 
-  debugCompress('modified', { from: filePath, to: destPath, modifiedAt: fileStat.mtime });
+  debugCompress(`modified: ${filePath}@${fileStat.mtime.toISOString()} ${destPath}@${destStat?.mtime.toISOString()}`);
   taskScheduler.push({
     sourcePath: filePath,
     destPath: destPath,
@@ -163,7 +163,7 @@ export async function removeDestFile(source: string, dest: string, filePath: str
   // Make sure have write permission
   const destStat = await safeFsStat(destPath);
   if (!destStat) {
-    debugDelete('skip-delete', { from: filePath, to: destPath });
+    debugDelete('skip-delete', filePath);
     return;
   }
 
